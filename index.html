@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSA Progress Tracker</title>
+<style>
+:root{--bg:#0b1020;--panel:#121a2e;--panel2:#18233b;--text:#edf2ff;--muted:#9ba9c5;--line:#283653;--accent:#65d6a6;--blue:#7da7ff;--amber:#f4c46a;--red:#ff8b8b}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#0b1020,#101a30);color:var(--text);font:15px/1.5 Inter,system-ui,Arial,sans-serif}
+.wrap{max-width:1180px;margin:auto;padding:28px 20px 60px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+h1{font-size:clamp(27px,4vw,38px);margin:0;letter-spacing:-1px}.sub{color:var(--muted);margin-top:5px}.tag{border:1px solid #315b52;color:var(--accent);padding:7px 12px;border-radius:999px;font-size:12px;font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.card{background:rgba(18,26,46,.94);border:1px solid var(--line);border-radius:17px;padding:18px;box-shadow:0 10px 30px #0002}
+.metric small,.muted{color:var(--muted)}.metric strong{display:block;font-size:29px;margin:5px 0 0}.metric .hint{font-size:12px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;margin-top:14px}.section-title{font-size:17px;font-weight:750;margin:0 0 14px}.bar{height:9px;background:#26324b;border-radius:99px;overflow:hidden}.bar>span{height:100%;display:block;background:linear-gradient(90deg,#49bd91,#8be5b9);border-radius:99px;transition:width .2s}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}button,select,input{font:inherit}button,.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:9px 12px;border-radius:10px;cursor:pointer}button:hover{border-color:var(--accent)}button.primary{background:var(--accent);border-color:var(--accent);color:#092016;font-weight:800}
+select,input[type="date"],input[type="number"],input[type="text"]{background:#0d1528;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:9px;min-width:0}
+.task-group{margin:16px 0}.task-group h3{font-size:14px;margin:0 0 9px;color:#cbd7ef}.task{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #26324b}.task:last-child{border:0}.task input{accent-color:var(--accent);width:17px;height:17px}.task label{flex:1}.task.done label{text-decoration:line-through;color:var(--muted)}
+form{display:grid;grid-template-columns:1fr 1fr;gap:10px}form .full{grid-column:1/-1}label.field{display:grid;gap:5px;color:var(--muted);font-size:12px}
+.chart{display:flex;align-items:end;gap:9px;height:170px;padding:12px 2px 0;border-bottom:1px solid var(--line)}.col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:end;height:100%;gap:6px;min-width:0}.col .stick{width:min(28px,75%);background:linear-gradient(180deg,#8be5b9,#3d9e7b);border-radius:7px 7px 2px 2px;min-height:2px}.col small{font-size:10px;color:var(--muted);white-space:nowrap}.col b{font-size:10px;color:#dce7fa}
+.log{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}.log:last-child{border:0}.empty{color:var(--muted);font-size:13px;padding:14px 0}
+.notice{font-size:12px;color:var(--muted);margin-top:12px}.pill{font-size:11px;border-radius:99px;padding:3px 8px;background:#20344a;color:#b9d5ff}
+footer{margin-top:18px;color:var(--muted);font-size:12px;text-align:center}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:1fr}}
+@media(max-width:480px){.wrap{padding:20px 13px 40px}.grid{gap:9px}.card{padding:14px}.metric strong{font-size:24px}form{grid-template-columns:1fr}form .full{grid-column:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div><h1>DSA Progress Tracker</h1><div class="sub">C++ · 6-month roadmap · 2 hours per day</div></div>
+    <span class="tag">YOUR LEARNING DASHBOARD</span>
+  </header>
+
+  <section class="grid">
+    <div class="card metric"><small>Topics completed</small><strong id="topicsMetric">0 / 32</strong><div class="hint">Across your six-month roadmap</div></div>
+    <div class="card metric"><small>Study hours logged</small><strong id="hoursMetric">0.0h</strong><div class="hint">Based on your study entries</div></div>
+    <div class="card metric"><small>Problems solved</small><strong id="problemsMetric">0</strong><div class="hint">Your own recorded count</div></div>
+    <div class="card metric"><small>Current streak</small><strong id="streakMetric">0 days</strong><div class="hint">Consecutive days with study logged</div></div>
+  </section>
+
+  <section class="layout">
+    <div class="card">
+      <div class="controls" style="justify-content:space-between;margin-bottom:12px">
+        <h2 class="section-title" style="margin:0">Roadmap checklist</h2>
+        <span class="pill" id="roadmapPct">0% complete</span>
+      </div>
+      <div class="bar"><span id="roadmapBar" style="width:0%"></span></div>
+      <div id="roadmap"></div>
+    </div>
+    <div class="card">
+      <h2 class="section-title">Log a study session</h2>
+      <form id="studyForm">
+        <label class="field">Date<input id="studyDate" type="date" required></label>
+        <label class="field">Hours studied<input id="studyHours" type="number" min=".1" max="24" step=".1" value="2" required></label>
+        <label class="field">Problems solved<input id="studyProblems" type="number" min="0" step="1" value="2" required></label>
+        <label class="field">Topic studied<input id="studyTopic" type="text" placeholder="e.g. Binary Search" required></label>
+        <button class="primary full" type="submit">Save study session</button>
+      </form>
+      <div class="notice">Log each session once. Your dashboard updates from these entries.</div>
+    </div>
+  </section>
+
+  <section class="layout">
+    <div class="card">
+      <div class="controls" style="justify-content:space-between">
+        <h2 class="section-title" style="margin:0">Progress analytics</h2>
+        <select id="period"><option value="week">Last 7 days</option><option value="month" selected>Last 30 days</option></select>
+      </div>
+      <div class="grid" style="grid-template-columns:repeat(2,1fr);margin-top:14px">
+        <div><small class="muted">Hours in period</small><div style="font-size:23px;font-weight:800" id="periodHours">0h</div></div>
+        <div><small class="muted">Problems in period</small><div style="font-size:23px;font-weight:800" id="periodProblems">0</div></div>
+      </div>
+      <div class="chart" id="chart"></div>
+      <div class="notice">Bars show daily study hours. Switch between weekly and monthly views.</div>
+    </div>
+    <div class="card">
+      <h2 class="section-title">Recent study sessions</h2>
+      <div id="logs"><div class="empty">No sessions yet. Add your first study session above.</div></div>
+      <div class="controls" style="margin-top:14px">
+        <button id="exportBtn">Export backup</button>
+        <button id="clearBtn">Clear all data</button>
+      </div>
+      <label class="field" style="margin-top:12px">Restore backup (JSON)<input type="file" id="importFile" accept=".json,application/json"></label>
+    </div>
+  </section>
+  <footer>Your progress is saved in this browser on this device. Export a backup regularly if you want to keep your records.</footer>
+</div>
+<script>
+const roadmap = [
+["Month 1 · C++ foundations",["C++ basics","Loops and functions","Arrays and strings","STL basics","Time complexity","Basic recursion"]],
+["Month 2 · Core DSA",["Searching algorithms","Sorting algorithms","Hashing","Array problems","Binary search","String problems"]],
+["Month 3 · Linear DSA",["Singly linked list","Doubly linked list","Stack","Queue","Backtracking","Two pointers and sliding window"]],
+["Month 4 · Trees and structures",["Binary trees","Binary search trees","Heap and priority queue","Greedy algorithms"]],
+["Month 5 · Graphs and DP",["Graph representation","BFS and DFS","Shortest paths","Dynamic programming","Knapsack and subsequences"]],
+["Month 6 · Career preparation",["Trie and advanced strings","Mixed DSA revision","Coding contests","Interview questions","Mock interviews"]]
+];
+const KEY="dsaProgressTrackerV1";
+let state=load();
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{done:[],sessions:[]}}catch(e){return{done:[],sessions:[]}}}
+function save(){localStorage.setItem(KEY,JSON.stringify(state));render()}
+function dateISO(d){return d.toISOString().slice(0,10)}
+function today(){return dateISO(new Date())}
+document.getElementById("studyDate").value=today();
+function renderRoadmap(){
+ const root=document.getElementById("roadmap");root.innerHTML="";
+ roadmap.forEach(([name,tasks])=>{
+  const group=document.createElement("div");group.className="task-group";
+  const h=document.createElement("h3");h.textContent=name;group.appendChild(h);
+  tasks.forEach(task=>{
+   const row=document.createElement("div");row.className="task"+(state.done.includes(task)?" done":"");
+   const cb=document.createElement("input");cb.type="checkbox";cb.checked=state.done.includes(task);
+   cb.addEventListener("change",()=>{state.done=cb.checked?[...state.done,task]:state.done.filter(x=>x!==task);save()});
+   const label=document.createElement("label");label.textContent=task;
+   row.append(cb,label);group.appendChild(row);
+  });root.appendChild(group);
+ });
+}
+function streak(){
+ const days=new Set(state.sessions.map(s=>s.date));let d=new Date();let count=0;
+ if(!days.has(today()))d.setDate(d.getDate()-1);
+ while(days.has(dateISO(d))){count++;d.setDate(d.getDate()-1)}
+ return count;
+}
+function render(){
+ const total=roadmap.reduce((n,g)=>n+g[1].length,0),done=state.done.length,pct=Math.round(done/total*100);
+ document.getElementById("topicsMetric").textContent=`${done} / ${total}`;
+ document.getElementById("hoursMetric").textContent=state.sessions.reduce((a,s)=>a+Number(s.hours),0).toFixed(1)+"h";
+ document.getElementById("problemsMetric").textContent=state.sessions.reduce((a,s)=>a+Number(s.problems),0);
+ document.getElementById("streakMetric").textContent=streak()+" days";
+ document.getElementById("roadmapPct").textContent=pct+"% complete";
+ document.getElementById("roadmapBar").style.width=pct+"%";
+ renderRoadmap();renderAnalytics();renderLogs();
+}
+function renderAnalytics(){
+ const days=document.getElementById("period").value==="week"?7:30;
+ const dates=[];for(let i=days-1;i>=0;i--){let d=new Date();d.setDate(d.getDate()-i);dates.push(dateISO(d))}
+ const sums=dates.map(date=>state.sessions.filter(s=>s.date===date).reduce((a,s)=>a+Number(s.hours),0));
+ const problems=dates.reduce((a,date)=>a+state.sessions.filter(s=>s.date===date).reduce((b,s)=>b+Number(s.problems),0),0);
+ const hours=sums.reduce((a,b)=>a+b,0);
+ document.getElementById("periodHours").textContent=hours.toFixed(1)+"h";
+ document.getElementById("periodProblems").textContent=problems;
+ const chart=document.getElementById("chart");chart.innerHTML="";
+ const max=Math.max(2,...sums);
+ dates.forEach((date,i)=>{
+  const col=document.createElement("div");col.className="col";
+  const val=document.createElement("b");val.textContent=sums[i]?sums[i].toFixed(1):"";
+  const stick=document.createElement("div");stick.className="stick";stick.style.height=(sums[i]/max*118)+"px";stick.title=date+": "+sums[i]+" hours";
+  const lab=document.createElement("small");lab.textContent=days===7?new Date(date+"T12:00:00").toLocaleDateString(undefined,{weekday:"short"}):new Date(date+"T12:00:00").getDate();
+  col.append(val,stick,lab);chart.appendChild(col);
+ });
+}
+function renderLogs(){
+ const root=document.getElementById("logs");root.innerHTML="";
+ const entries=[...state.sessions].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8);
+ if(!entries.length){root.innerHTML='<div class="empty">No sessions yet. Add your first study session above.</div>';return}
+ entries.forEach(s=>{
+  const row=document.createElement("div");row.className="log";
+  const left=document.createElement("div");left.innerHTML="";
+  const topic=document.createElement("strong");topic.textContent=s.topic;
+  const meta=document.createElement("div");meta.className="muted";meta.textContent=s.date;
+  left.append(topic,meta);
+  const right=document.createElement("div");right.style.textAlign="right";right.textContent=`${Number(s.hours).toFixed(1)}h · ${s.problems} problems`;
+  row.append(left,right);root.appendChild(row);
+ });
+}
+document.getElementById("studyForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ const entry={date:document.getElementById("studyDate").value,hours:Number(document.getElementById("studyHours").value),problems:Number(document.getElementById("studyProblems").value),topic:document.getElementById("studyTopic").value.trim()};
+ if(!entry.topic||!entry.date||entry.hours<=0||entry.problems<0)return;
+ state.sessions.push(entry);document.getElementById("studyTopic").value="";save();
+});
+document.getElementById("period").addEventListener("change",renderAnalytics);
+document.getElementById("exportBtn").addEventListener("click",()=>{
+ const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download="dsa-progress-backup.json";a.click();URL.revokeObjectURL(url);
+});
+document.getElementById("importFile").addEventListener("change",async e=>{
+ const file=e.target.files[0];if(!file)return;
+ try{const data=JSON.parse(await file.text());if(!Array.isArray(data.done)||!Array.isArray(data.sessions))throw Error();
+ state=data;save();alert("Backup restored.");
+ }catch(err){alert("That backup file is not valid.");}e.target.value="";
+});
+document.getElementById("clearBtn").addEventListener("click",()=>{
+ if(confirm("Delete all saved DSA progress from this browser? This cannot be undone unless you exported a backup.")){state={done:[],sessions:[]};save()}
+});
+render();
+</script>
+</body>
+</html>
